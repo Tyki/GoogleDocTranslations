@@ -1,0 +1,28 @@
+{
+  "name": "spreadsheet-translator",
+  "version": "0.0.1",
+  "description": "",
+  "main": "generate-translate.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tyki/GoogleDocTranslations.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Tyki/GoogleDocTranslations/issues"
+  },
+  "homepage": "https://github.com/Tyki/GoogleDocTranslations#readme",
+  "dependencies": {
+    "align-yaml": "^0.1.8",
+    "bluebird": "^3.5.4",
+    "command-line-args": "^5.1.1",
+    "google-spreadsheet": "^2.0.7",
+    "js-beautify": "^1.9.1",
+    "unflatten": "^1.0.4"
+  }
+}
