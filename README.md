@@ -20,5 +20,5 @@ In order to make it works, you need a service key from Google Cloud Platform
 # Usage 
 
 ```
-
+node node_modules/.bin/generate-translate.js -g 14ESdKxdEktB4rLesYlIMMve6aapCT2Q2jGB17F466W6mo -o js -l fr -c ./key.json
 ```
