@@ -28,3 +28,41 @@ npm install --save-dev spreadsheet-translator
 ```
 node node_modules/.bin/generate-translate.js -g 14ESdKxdEktB4rLesYlIMMve6aapCT2Q2jGB17F466W6mo -o js -l fr -c ./key.json
 ```
+
+# Spreadsheet format
+
+The spreadsheet must be in a specific format.
+For the moment, the script only take the first tab of the spreadsheet
+
+First column will be the keys
+Second column will be translated values
+
+Here is an example : 
+
+[Spreadsheet sample](https://imgur.com/8Ic5zcw)
+
+Output generated : 
+
+```
+module.exports = {
+  'fr': {
+    mykey: 'My translation',
+    my: {
+      nested: {
+        key: 'My second translation
+      }
+    },
+    more: {
+      nested: {
+        key: {
+          in: {
+            nested: {
+              key: 'My third translation'
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
