@@ -17,6 +17,12 @@ In order to make it works, you need a service key from Google Cloud Platform
 - Save and download the key
 ```
 
+# How to install
+
+```
+npm install --save-dev spreadsheet-translator
+```
+
 # Usage 
 
 ```
