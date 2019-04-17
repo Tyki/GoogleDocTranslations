@@ -29,6 +29,17 @@ npm install --save-dev spreadsheet-translator
 node node_modules/.bin/generate-translate.js -g 14ESdKxdEktB4rLesYlIMMve6aapCT2Q2jGB17F466W6mo -o js -l fr -c ./key.json
 ```
 
+# Arguments: 
+
+```
+--locale, -l : locale of the file. The name of the file generated will be the name of the locale. Default : 'fr'
+--gsid, -g : Spreadsheet ID
+--outputFormat, -o : Output format. For now, only JS is available. Default: 'JS'
+--help, -h : Display help
+--outputDir, -d : Output path file. Current directory by default. Default : './'
+--credentialsPath, -c : Path to google credentials file
+```
+
 # Spreadsheet format
 
 The spreadsheet must be in a specific format.
