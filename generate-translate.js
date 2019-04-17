@@ -114,7 +114,7 @@ Arguments :
 
 Example : 
 
-node scripts/gdocTranslate/generate-translate.js -g 14ESdKxdEktB4rLesYlIMMve6aapCT2Q2jGB17F466W6mo -o js -l fr
+node node_modules/.bin/generate-translate.js -g 14ESdKxdEktB4rLesYlIMMve6aapCT2Q2jGB17F466W6mo -o js -l fr
 // Generate a file name 'fr.js' based on spreadsheet ID 14ESdKxdEktB4rLesYlIMMve6aapCT2Q2jGB17F466W6mo
 `)
   process.exit(0)
