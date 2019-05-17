@@ -24,7 +24,9 @@
     "align-yaml": "^0.1.8",
     "bluebird": "^3.5.4",
     "command-line-args": "^5.1.1",
+    "csv-writer": "^1.2.0",
     "google-spreadsheet": "^2.0.7",
+    "googleapis": "^39.2.0",
     "js-beautify": "^1.9.1",
     "unflatten": "^1.0.4"
   }

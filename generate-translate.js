@@ -7,11 +7,13 @@ const util = require('util')
 const jsBeautifier = require('js-beautify')
 const yamlBeautifier = require('align-yaml')
 const CONST = require('./const')
+const createCsvWriter = require('csv-writer').createObjectCsvWriter
 
 const defaultOptions = {
   outputFormat: 'js',
   locale: 'fr',
   gid: '',
+  sourceDir: './',
   outputDir: './'
 }
 
@@ -20,13 +22,14 @@ const optionDefinitions = [
   {name: 'gsid', alias: 'g', type: String},
   {name: 'outputFormat', alias: 'o', type: String},
   {name: 'help', alias: 'h', type: Boolean},
+  {name: 'sourceDir', alias: 's', type: String},
   {name: 'outputDir', alias: 'd', type: String},
   {name: 'credentialsPath', alias: 'c', type: String}
 ]
 
 const cliOptions = commandLineArgs(optionDefinitions)
-const mandatoryFields = [CONST.MANDATORY_FIELDS.GSID, CONST.MANDATORY_FIELDS.CREDENTIALS_PATH]
-const allowedOutputFormat = ['js']
+const mandatoryFields = [CONST.MANDATORY_FIELDS.CREDENTIALS_PATH]
+const allowedOutputFormat = ['js', 'csv']
 
 if (cliOptions.hasOwnProperty('help')) {
   help()
@@ -58,47 +61,73 @@ if (!allowedOutputFormat.includes(options['outputFormat'])) {
   process.exit(1)
 }
 
-const spreadsheet = new GoogleSpreadsheet(options['gsid'])
-const authPromise = bluebird.promisify(spreadsheet.useServiceAccountAuth)
-const getRowsPromise = bluebird.promisify(spreadsheet.getRows)
+if (options['outputFormat'] === 'js') {
+  if (options['gsid']) {
+    const spreadsheet = new GoogleSpreadsheet(options['gsid'])
+    const authPromise = bluebird.promisify(spreadsheet.useServiceAccountAuth)
+    const getRowsPromise = bluebird.promisify(spreadsheet.getRows)
 
-console.log('Authenticating...')
+    console.log('Authenticating...')
 
-return authPromise({
-  client_email: credentials['client_email'],
-  private_key: credentials['private_key']
-})
-.then(() => {
-  console.log('Fetching cells...')
-  return getRowsPromise(1, {'offset': 1,'limit': 10000})
-})
-.then(data => {
-  console.log('Generating translations file...')
-  let translatedPayload = {}
-  data.forEach(row => {
-    translatedPayload[row['translationkey']] = row['translatedtext']
-  })
+    return authPromise({
+      client_email: credentials['client_email'],
+      private_key: credentials['private_key']
+    })
+    .then(() => {
+      console.log('Fetching cells...')
+      return getRowsPromise(1, {'offset': 1,'limit': 10000})
+    })
+    .then(data => {
+      console.log('Generating translations file...')
+      let translatedPayload = {}
+      data.forEach(row => {
+        translatedPayload[row['translationkey']] = row['translatedtext']
+      })
 
-  let finalPayload = {
-    [options['locale']]: unflatten(translatedPayload)
+      let finalPayload = {
+        [options['locale']]: unflatten(translatedPayload)
+      }
+
+      if (options['outputFormat'] === 'js') {
+        fs.writeFileSync(`${options['outputDir']}${options['locale']}.js`, jsBeautifier(`module.exports = ${util.inspect(finalPayload, false, null)}`, {indent_size: 2}) + '\n')
+      }
+      // else {
+      //   fs.writeFile(
+      //     `${options['outputDir']}${options['locale']}.yaml`,
+      //     yamlBeautifier(util.inspect(finalPayload, false, null).replace(/{/g, '').replace(/}/g, ''), 4)
+      //   )
+      // }
+
+      console.log('Done.')
+
+    })
+    .catch(error => {
+      console.error(error)
+    })
+  } else {
+    console.error('ERROR: gsid missing for gs to js file generation. If you desired to generate a js file from gs, you need to provide the gsid.')
+    process.exit(1)
   }
+}
 
-  if (options['outputFormat'] === 'js') {
-    fs.writeFileSync(`${options['outputDir']}${options['locale']}.js`, jsBeautifier(`module.exports = ${util.inspect(finalPayload, false, null)}`, {indent_size: 2}) + '\n')
-  } 
-  // else {
-  //   fs.writeFile(
-  //     `${options['outputDir']}${options['locale']}.yaml`, 
-  //     yamlBeautifier(util.inspect(finalPayload, false, null).replace(/{/g, '').replace(/}/g, ''), 4)
-  //   )
-  // }
+if (options['outputFormat'] === 'csv') {
+  const sourceFile = require(`${options['sourceDir']}${options['locale']}.js`)
+  const entries = Object.entries(sourceFile)[0][1]
+  const data = []
+  const datas = loopThroughObject(entries, '', data)
 
-  console.log('Done.')
-
-})
-.catch(error => {
-  console.error(error)
-})
+  const csvWriter = createCsvWriter({
+    path: `${options['locale']}.csv`,
+    header: [
+      {id: 'translationkey', title: 'translationkey'},
+      {id: 'translatedtext', title: 'translatedtext'}
+    ]
+  })
+  console.log(datas)
+  csvWriter
+    .writeRecords(datas)
+    .then(() => console.log('The CSV file was written successfully'))
+}
 
 function help () {
   console.log(`
@@ -106,16 +135,55 @@ Fetching columns from a spreadsheet and generate a translate file
 
 Arguments : 
 --locale, -l : locale of the file. The name of the file generated will be the name of the locale. Default : 'fr'
---gsid, -g : Spreadsheet ID
+--gsid, -g : Spreadsheet ID (Optional)
 --outputFormat, -o : Output format. For now, only JS is available. Default: 'JS'
 --help, -h : Display help
+--sourceDir, -s : Source directory. Current directory by default. Default : './'
 --outputDir, -d : Output path file. Current directory by default. Default : './'
 --credentialsPath, -c : Path to google credentials file
 
 Example : 
 
-node node_modules/.bin/generate-translate.js -g 14ESdKxdEktB4rLesYlIMMve6aapCT2Q2jGB17F466W6mo -o js -l fr
+node node_modules/.bin/spreadsheet-translator -g 14ESdKxdEktB4rLesYlIMMve6aapCT2Q2jGB17F466W6mo -o js -l fr
 // Generate a file name 'fr.js' based on spreadsheet ID 14ESdKxdEktB4rLesYlIMMve6aapCT2Q2jGB17F466W6mo
+
+node node_modules/.bin/spreadsheet-translator -o csv -l fr-FR -s ./translations/ -c ./key.json
+// Generate a file name 'fr-FR.csv' based on fr-FR.js file in "translations" directory
 `)
   process.exit(0)
+}
+
+function loopThroughObject(object, previousKey, data) {
+  Object.keys(object).map((key) => {
+    let strKey
+    if (key.match(/^\d+$/)) {
+      strKey = '[' + key + ']'
+    } else {
+      if (previousKey !== '') {
+        strKey = '.' + key
+      } else {
+        strKey = key
+      }
+    }
+
+    let prevKey
+    if (previousKey !== '') {
+      prevKey = previousKey + strKey
+    } else {
+      prevKey = strKey
+    }
+
+    if (typeof object[key] !== 'object') {
+      const obj = {
+        'translationkey': prevKey,
+        'translatedtext': object[key]
+      }
+
+      data.push(obj)
+    } else {
+      loopThroughObject(object[key], prevKey, data)
+    }
+  })
+
+  return data
 }
