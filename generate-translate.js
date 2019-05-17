@@ -165,9 +165,6 @@ function loopThroughObject(object, previousKey, data) {
     }
 
     if (typeof object[key] !== 'object') {
-      // console.log('-----------------------------------------------------------------------------------------------------------')
-      // console.log(prevKey + ' | ' + object[key])
-
       const obj = {
         'translationkey': prevKey,
         'translatedtext': object[key]
